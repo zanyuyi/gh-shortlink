@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>正在跳转...</title><link rel="icon" href="data:,">
+<style>body{font-family:system-ui;line-height:1.6;margin:0;padding:2rem;background:#0b1020;color:#e6e9f0}.box{max-width:720px;margin:8vh auto;background:#121a33;border:1px solid #1f2b55;border-radius:16px;padding:24px}</style>
+</head><body><div class="box"><h1 id="title">正在跳转...</h1><div id="msg">若未自动跳转，请稍候或点击目标链接。</div><div id="fallback" style="margin-top:12px"></div></div>
+<script src="assets/utils.js"></script>
+<script>(async function(){const path=location.pathname.replace(/^\/?/,'');let code=path;if(code.startsWith('r/')) code=code.slice(2);code=code.split('/')[0].trim();if(!code){document.getElementById('title').textContent='未提供短码';document.getElementById('msg').textContent='在地址栏后添加 /{code} 访问短链';return;}let data=[];try{const res=await fetch('assets/mappings.json?ts='+Date.now());if(res.ok) data=await res.json();}catch(e){}const item=data.find(x=>x.code===code);
+if(item && item.passwordHash){
+  const pass = prompt('该短链需要密码，请输入：')||'';
+  const ok = await sha256Hex(pass) === item.passwordHash;
+  if(!ok){ document.getElementById('title').textContent='密码错误'; document.getElementById('msg').textContent='未能通过验证'; return; }
+}if(!item){document.getElementById('title').textContent='未找到短码';document.getElementById('msg').textContent='可能尚未部署或已删除';return;}if(item.expiresAt){const exp=Date.parse(item.expiresAt);if(!isNaN(exp)&&Date.now()>exp){document.getElementById('title').textContent='链接已过期';document.getElementById('msg').textContent='请联系管理员';return;}}let target=item.url;try{const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);if(item.targets&&item.targets.device){if(isMobile&&item.targets.device.mobile) target=item.targets.device.mobile;if(!isMobile&&item.targets.device.desktop) target=item.targets.device.desktop;}const lang=(navigator.language||'').toLowerCase();if(item.targets&&item.targets.locale){for(const k in item.targets.locale){if(lang.startsWith(k.toLowerCase())){target=item.targets.locale[k];break;}}}}catch(e){}document.getElementById('fallback').innerHTML='<a id="go" href="'+escapeHtml(target)+'">立即前往：'+escapeHtml(target)+'</a>';setTimeout(()=>{try{location.replace(target);}catch(e){}},200);})();</script>
+</body></html>

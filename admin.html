@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>短链管理</title><link rel="icon" href="data:,">
+<style>body{font-family:system-ui;line-height:1.6;margin:0;padding:2rem;background:#0b1020;color:#e6e9f0}.wrap{max-width:1024px;margin:0 auto}.card{background:#121a33;border:1px solid #1f2b55;border-radius:16px;padding:20px}input,button{width:100%;padding:.7rem;border-radius:12px;border:1px solid #27315d;background:#0d1530;color:#e6e9f0}.btn{cursor:pointer;background:#2f65f5;border:0;color:#fff;font-weight:600}.hidden{display:none}table{width:100%;border-collapse:separate;border-spacing:0 8px}td,th{text-align:left;padding:10px;background:#0b122b;border:1px solid #27315d}</style>
+</head><body><div class="wrap"><div class="card">
+<h1>短链管理（离线导入/导出 JSON）</h1>
+<div id="login"><label>管理员密码</label><input id="adminPass" type="password"><button class="btn" id="loginBtn" style="margin-top:.6rem">进入</button><div id="loginMsg"></div></div>
+<div id="panel" class="hidden">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <button class="btn" id="btnLoad">拉取 mappings.json</button>
+    <input id="fileImport" type="file" accept="application/json">
+    <button class="btn" id="btnAdd">新增</button>
+    <button class="btn" id="btnExport">导出</button>
+  </div>
+  <table><thead><tr><th>code</th><th>url</th><th>expiresAt</th><th>mobile</th><th>desktop</th><th>操作</th></tr></thead><tbody id="tbody"></tbody></table>
+</div>
+</div></div>
+<script src="assets/utils.js"></script><script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>(function(){const $=s=>document.querySelector(s);const login=$("#login"),panel=$("#panel"),tbody=$("#tbody");let data=[];$("#loginBtn").onclick=async()=>{const ok=await ShortLink.verifyAdmin($("#adminPass").value);if(ok){login.classList.add("hidden");panel.classList.remove("hidden");}else{$("#loginMsg").textContent="密码错误";}};$("#btnLoad").onclick=async()=>{data=await ShortLink.fetchMappings();render();};$("#fileImport").onchange=e=>{const f=e.target.files[0];if(!f) return;const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);render();}catch(err){alert("JSON 解析失败: "+err.message);}};r.readAsText(f);};$("#btnAdd").onclick=()=>{const code=prompt("短码（可空随机）")||"";const url=prompt("长链接 URL")||"";ShortLink.createMapping({url,code:code||null,expiresAt:null,password:null,targets:{device:{mobile:null,desktop:null},locale:{}}}).then(m=>{data.push(m);render();}).catch(e=>alert(e.message));};$("#btnExport").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="mappings.json";a.click();};function render(){tbody.innerHTML="";for(const m of data){const tr=document.createElement("tr");tr.innerHTML=`<td>${m.code}</td><td>${escapeHtml(m.url)}</td><td>${m.expiresAt||""}</td><td>${m.targets?.device?.mobile||""}</td><td>${m.targets?.device?.desktop||""}</td><td><button class="btn" data-act="edit" data-code="${m.code}">编辑</button> <button class="btn" data-act="del" data-code="${m.code}">删除</button></td>`;tbody.appendChild(tr);}tbody.querySelectorAll("button").forEach(b=>{b.onclick=async(e)=>{const code=e.target.getAttribute("data-code");if(e.target.getAttribute("data-act")==="del"){const i=data.findIndex(x=>x.code===code);if(i>=0){data.splice(i,1);render();}}else{const m=data.find(x=>x.code===code);const url=prompt("URL",m.url)||"";
+const expiresAt=prompt("过期时间（ISO8601，可空）", m.expiresAt||"")||"";
+const pw=prompt("访问密码（留空不变；输入单个空格清除）","")||"";
+if(pw.trim()===" "){ m.passwordHash=null; } else if(pw.trim()!==""){ m.passwordHash=await sha256Hex(pw.trim()); }
+m.url=url; m.expiresAt = expiresAt||null; render();}});}})();</script>
+</body></html>

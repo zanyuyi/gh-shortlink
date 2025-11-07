@@ -1,0 +1,16 @@
+[
+  {
+    "code": "hello",
+    "url": "https://www.example.com/",
+    "createdAt": "2025-11-07T01:35:34Z",
+    "expiresAt": null,
+    "passwordHash": null,
+    "targets": {
+      "device": {
+        "mobile": null,
+        "desktop": null
+      },
+      "locale": {}
+    }
+  }
+]

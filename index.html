@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>短链生成器</title><link rel="icon" href="data:,">
+<style>body{font-family:system-ui;line-height:1.6;margin:0;padding:2rem;background:#0b1020;color:#e6e9f0}.wrap{max-width:920px;margin:0 auto}.card{background:#121a33;border:1px solid #1f2b55;border-radius:16px;padding:20px}input,button{width:100%;padding:.8rem;border-radius:12px;border:1px solid #27315d;background:#0d1530;color:#e6e9f0}.btn{cursor:pointer;background:#2f65f5;border:0;color:#fff;font-weight:600}</style>
+</head><body><div class="wrap"><div class="card">
+<h1>短链生成器（纯静态）</h1>
+<label>长链接 URL</label><input id="url" placeholder="https://example.com">
+<label style="margin-top:.6rem;display:block">自定义短码（可空）</label><input id="code" placeholder="留空自动生成">
+<button class="btn" id="gen" style="margin-top:.8rem">生成</button>
+<pre id="out" style="background:#0b122b;border:1px dashed #2a386e;border-radius:12px;padding:12px;margin-top:12px"></pre>
+</div></div>
+<script src="assets/utils.js"></script><script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>(function(){const url=document.getElementById('url');const code=document.getElementById('code');const out=document.getElementById('out');document.getElementById('gen').onclick=async()=>{try{const m=await ShortLink.createMapping({url:url.value.trim(),code:code.value.trim()||null,expiresAt:null,password:null,targets:{device:{mobile:null,desktop:null},locale:{}}});out.textContent=JSON.stringify(m,null,2);}catch(e){out.textContent='错误: '+e.message}}})();</script>
+</body></html>
